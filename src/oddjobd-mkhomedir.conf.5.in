@@ -1,0 +1,41 @@
+.TH oddjobd-mkhomedir.conf 5 "17 June 2014" "oddjob Manual"
+
+.SH NAME
+oddjobd-mkhomedir.conf - allow limited use of the mkhomedir functions
+
+.SH DESCRIPTION
+The \fB@mysysconfdir@/oddjobd.conf.d/oddjobd-mkhomedir.conf\fR is typically
+processed along with other files in the \fB@mysysconfdir@/oddjobd.conf.d\fR
+directory.
+
+The mkhomedir helper itself accepts these options:
+.TP
+-f
+Restore behavior before CVE-2020-10737 was fixed: create the home directory
+with user's ownership directly rather than create it as a root and only after
+populating it change to the user's ownership. The former behavior is insecure
+but may be used to allow creation of NFS-mounted home directories when
+non-Kerberos authentication is in use. It is prone for a race condition that
+could be exploited in the NFS-mounted home directories use case. To avoid
+CVE-2020-10737, do not use \fB-f\fR option in production environments.
+.TP
+-q
+Refrain from outputting the usual "Creating home directory..." message when it
+creates a home directory.
+.TP
+-n
+Only create the home directory; do not populate it using the contents of the
+skeleton directory.
+.TP
+-s
+Override the location of the skeleton directory (by default: \fI/etc/skel\fR).
+.TP
+-u
+Specify a umask whose bits are masked off of contents of the skeleton directory
+while they are copied to the user's new home directory.  The default is read
+from \fB/etc/login.defs\fR by taking \fBHOME_MODE\fR and \fBUMASK\fR values, in
+this order.  First found value persists.
+
+.SH SEE ALSO
+\fBoddjob.conf\fR(5)
+\fBlogin.defs\fR(5)

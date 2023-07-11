@@ -1,0 +1,29 @@
+.TH pam_oddjob_mounthomedir 8 "25 April 2005" "oddjob Manual"
+
+.SH NAME
+pam_oddjob_mounthomedir.so
+
+.SH SYNOPSIS
+session optional /lib/security/pam_oddjob_mounthomedir.so
+
+.SH DESCRIPTION
+The \fIpam_oddjob_mounthomedir.so\fR module invokes the
+\fImounthomedirfor\fR method of the \fI@NAMESPACE@.oddjob\fR service for the
+\fBPAM_USER\fR if the module is running with superuser privileges, or the
+\fImountmyhomedir\fR method if the module is not.  The requested action,
+either "mount" or "umount", is also passed as an argument.
+
+If \fID-Bus\fR has not been configured to allow the calling application to
+invoke these methods of the \fI@NAMESPACEPATH@/oddjob\fR object provided by the
+\fI@NAMESPACE@.oddjob\fR service, then \fIoddjobd\fR will not receive the
+request and an error will be returned by \fID-Bus\fR.
+
+If \fIoddjobd\fR has not been configured to provide these methods, or the
+user is not authorized to use them, then \fIoddjobd\fR will ignore the
+module's requests.
+
+.SH SEE ALSO
+\fBoddjob_request\fR(1)
+\fBoddjob.conf\fR(5)
+\fBoddjobd.conf\fR(5)
+\fBoddjobd\fR(8)
