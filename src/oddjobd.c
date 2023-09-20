@@ -2985,7 +2985,11 @@ main(int argc, char **argv)
 
 	/* Open a connection to the message bus. */
 	check_selinux_applicable();
+#if SELINUX_ACLS
 	ctx = oddjob_dbus_listeners_new(options.bus, globals.selinux_enabled);
+#else
+	ctx = oddjob_dbus_listeners_new(options.bus, 0);
+#endif
 	if (ctx == NULL) {
 		fprintf(stderr, "Error connecting to D-Bus!\n");
 		return 2;
