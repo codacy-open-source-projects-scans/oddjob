@@ -25,9 +25,7 @@ endif
 
 confddir = $(sysconfdir)/$(PACKAGE)d.conf.d
 confd_DATA = oddjobd-introspection.conf
-if BUILD_PAM
 confd_DATA += oddjobd-mkhomedir.conf
-endif
 
 CLEANFILES = $(confd_DATA)
 
@@ -40,10 +38,8 @@ install-data-hook:
 pkgsysconfdir = $(sysconfdir)/$(PACKAGE)
 systemdbusdir = $(sysconfdir)/@DBUS_PACKAGE@/system.d
 systemdbus_DATA = oddjob.conf
-if BUILD_PAM
 systemdbus_DATA += oddjob-mkhomedir.conf
 pkglibexec_PROGRAMS = mkhomedir
-endif
 
 pkglibexecdir = $(libexecdir)/$(PACKAGE)
 pkglibexec_SCRIPTS = sanity.sh

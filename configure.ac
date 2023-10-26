@@ -43,18 +43,21 @@ DBUS_INTROSPECTION_METHOD=Introspect
 AC_SUBST(DBUS_INTROSPECTION_INTERFACE)
 AC_SUBST(DBUS_INTROSPECTION_METHOD)
 
-pam=yes
-AC_CHECK_HEADERS(security/pam_modules.h)
-savedLDFLAGS="$LDFLAGS"
-LDFLAGS=
-savedLIBS="$LIBS"
-LIBS=
-AC_CHECK_FUNCS([pam_get_user pam_get_item],,[AC_CHECK_LIB(pam,pam_get_user,,pam=no)])
-PAM_LIBS="$LIBS"
-LIBS="$savedLIBS"
-LDFLAGS="$savedLDFLAGS"
-AC_SUBST(PAM_LIBS)
-AM_CONDITIONAL(BUILD_PAM,test x$pam = xyes)
+AC_ARG_WITH([pam],
+	[AS_HELP_STRING([--with-pam],[Build and install pam_oddjob_mkhomedir])]
+	,,[with_pam=yes])
+AS_IF([test "x$with_pam" != "xno"],
+	[AC_CHECK_HEADERS(security/pam_modules.h)
+	savedLDFLAGS="$LDFLAGS"
+	LDFLAGS=
+	savedLIBS="$LIBS"
+	LIBS=
+	AC_CHECK_FUNCS([pam_get_user pam_get_item],,[AC_CHECK_LIB(pam,pam_get_user,,pam=no)])
+	PAM_LIBS="$LIBS"
+	LIBS="$savedLIBS"
+	LDFLAGS="$savedLDFLAGS"
+	AC_SUBST(PAM_LIBS)])
+AM_CONDITIONAL(BUILD_PAM,[test "x$with_pam" != "xno"])
 
 dnl Oh, for the clear management of OID arcs....
 NAMESPACE=com.redhat
@@ -74,26 +77,19 @@ DEFAULT_RECONNECT_TIMEOUT=30
 AC_DEFINE_UNQUOTED(DEFAULT_RECONNECT_TIMEOUT,$DEFAULT_RECONNECT_TIMEOUT,[Define to the default amount of time which oddjobd will pause between attempts to reconnect to the system message bus after being disconnected for any reason.])
 AC_SUBST(DEFAULT_RECONNECT_TIMEOUT)
 
-AC_ARG_ENABLE(systemd,
-AS_HELP_STRING([--enable-systemd],[install unit file for systemd]),
-SYSTEMD=$enableval,
-SYSTEMD=no)
-
-AC_SUBST(SYSTEMD)
-AM_CONDITIONAL(SYSTEMD,test x$SYSTEMD != xno)
-if test x$SYSTEMD = xyes ; then
-	SYSTEMDSYSTEMUNITDIR=`pkg-config --variable=systemdsystemunitdir systemd 2> /dev/null`
-	AC_MSG_RESULT(will install systemd unit file)
-else
-	AC_MSG_RESULT(will install sysv init script)
-fi
-AC_SUBST(SYSTEMDSYSTEMUNITDIR)
+AC_ARG_WITH([systemdsystemunitdir],
+	[AS_HELP_STRING([--with-systemdsystemunitdir=DIR],
+		[Directory for systemd service files])],,
+		[PKG_CHECK_VAR([with_systemdsystemunitdir],[systemd],
+			[systemdsystemunitdir],,
+			[with_systemdsystemunitdir=${libdir}/systemd/system])])
+AC_SUBST([systemdsystemunitdir],[$with_systemdsystemunitdir])
 
 AC_ARG_ENABLE(sample,
 AS_HELP_STRING(--enable-sample,[Build and install a sample service.]),
-sample=$withval,
-sample=no)
-AM_CONDITIONAL(INSTALL_SAMPLE,test x$sample = xyes)
+,
+[enables_sample=no])
+AM_CONDITIONAL(INSTALL_SAMPLE,test x$enable_sample = xyes)
 
 AC_ARG_ENABLE(experimental,
 AS_HELP_STRING(--enable-experimental,[Build experimental helpers.]),
@@ -330,18 +326,18 @@ AC_DEFINE_UNQUOTED(DBUS_PACKAGE,"$DBUS_PACKAGE",[Define to the package name for 
 
 AC_ARG_ENABLE(xml-docs,
 AS_HELP_STRING(--enable-xml-docs,[Reformat XML documentation.]),
-xml_docs=$withval,
-xml_docs=no)
-AM_CONDITIONAL(REFORMAT_XML_DOCS,test x$xml_docs = xyes)
+,
+[enable_xml_docs=no])
+AM_CONDITIONAL(REFORMAT_XML_DOCS,test x$enable_xml_docs = xyes)
 AC_PATH_PROGS(PATH_XMLTO,xmlto,:)
 AC_SUBST(PATH_XMLTO)
 
 AC_ARG_ENABLE(compat-dtd,
 AS_HELP_STRING(--enable-compat-dtd,[Use DocBook 4.3 instead of DocBook 4.4.]),
-compat_dtd=$withval,
-compat_dtd=no)
+,
+[enable_xml_dtd=no])
 AC_MSG_CHECKING([which version of the DocBook DTD to use])
-if test x$compat_dtd = xyes ; then
+if test x$enable_compat_dtd = xyes ; then
 	DOCBOOK_PACKAGE_START=
 	DOCBOOK_PACKAGE_END=
 	DOCBOOK_VERSION=4.3
@@ -364,47 +360,6 @@ AC_SUBST(currentuid)
 currentgid=`id -g`
 AC_SUBST(currentgid)
 AC_PATH_PROGS(PATH_PWD,pwd,pwd)
-
-AC_ARG_ENABLE(systemd,
-AS_HELP_STRING(--enable-systemd,[Install systemd unit files]),
-systemd=$enableval
-if test x$systemd = xyes ; then
-	SYSTEMDSYSTEMUNITDIR=`pkg-config --variable=systemdsystemunitdir systemd`
-fi
-,
-if pkg-config systemd 2> /dev/null ; then
-	SYSTEMDSYSTEMUNITDIR=`pkg-config --variable=systemdsystemunitdir systemd 2> /dev/null`
-	systemd=yes
-else
-	systemd=no
-fi
-)
-
-AC_ARG_ENABLE(sysvinit,
-AS_HELP_STRING(--enable-sysvinit,[Install sysvinit unit files]),
-sysvinit=$enableval,
-if test x$systemd = xno ; then
-	sysvinit=yes
-else
-	sysvinit=no
-fi
-)
-if test x$systemd = xyes ; then
-	AC_MSG_RESULT([installing systemd unit file])
-	if test "x$SYSTEMDSYSTEMUNITDIR" = x ; then
-		AC_MSG_ERROR([error locating systemd system unit directory])
-	fi
-	AC_SUBST(SYSTEMDSYSTEMUNITDIR)
-else
-	AC_MSG_RESULT([not installing systemd unit file])
-fi
-AM_CONDITIONAL(SYSTEMD,test x$systemd = xyes)
-if test x$sysvinit = xyes ; then
-	AC_MSG_RESULT([installing sysv init script])
-else
-	AC_MSG_RESULT([not installing sysv init script])
-fi
-AM_CONDITIONAL(SYSVINIT,test x$sysvinit = xyes)
 
 AC_ARG_ENABLE(pie,
 AS_HELP_STRING(--enable-pie,[Build position-independent executables.]),

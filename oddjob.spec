@@ -96,15 +96,11 @@ sample_flag=--enable-sample
 %configure \
 	--disable-static \
 	--enable-pie --enable-now \
+	--with-pam \
 	--with-selinux-acls \
 	--with-selinux-labels \
 	--without-python --enable-xml-docs --enable-compat-dtd \
 	--disable-dependency-tracking \
-%if %{systemd}
-	--enable-systemd --disable-sysvinit \
-%else
-	--enable-sysvinit --disable-systemd \
-%endif
 	$sample_flag
 make %{_smp_mflags}
 
@@ -118,6 +114,11 @@ if ! test -d "$RPM_BUILD_ROOT"/%{_lib}/security ; then
 	mkdir -p "$RPM_BUILD_ROOT"/%{_lib}/security
 	mv "$RPM_BUILD_ROOT"/%{_libdir}/security/*.so "$RPM_BUILD_ROOT"/%{_lib}/security/
 fi
+%endif
+%if %{systemd}
+rm -f "$RPM_BUILD_ROOT"%{_initrddir}/oddjobd
+%else
+rm -f "$RPM_BUILD_ROOT"%{_unitdir}/oddjobd.service
 %endif
 # Recommended, though I disagree.
 rm -f "$RPM_BUILD_ROOT"/%{_libdir}/*.la
