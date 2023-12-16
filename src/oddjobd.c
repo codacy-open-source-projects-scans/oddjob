@@ -47,6 +47,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <dbus/dbus.h>
+#include <libxml/globals.h>
 #include <libxml/xmlreader.h>
 #ifdef SELINUX_ACLS
 #include <selinux/selinux.h>
