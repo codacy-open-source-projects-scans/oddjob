@@ -45,12 +45,7 @@
 #ifdef SELINUX_LABELS
 
 #include <selinux/selinux.h>
-
-#ifndef HAVE_MATCHPATHCON_INIT
-static void
-matchpathcon_init(const char *path) {
-}
-#endif
+#include <selinux/label.h>
 
 static dbus_bool_t
 oddjob_check_selinux_enabled(void)
@@ -58,9 +53,6 @@ oddjob_check_selinux_enabled(void)
 	static int selinux_enabled = -1;
 	if (selinux_enabled == -1) {
 		selinux_enabled = is_selinux_enabled();
-		if (selinux_enabled == 1) {
-			matchpathcon_init(NULL);
-		}
 	}
 	return (selinux_enabled == 1);
 }
@@ -68,24 +60,28 @@ oddjob_check_selinux_enabled(void)
 void
 oddjob_set_selinux_file_creation_context(const char *path, mode_t mode)
 {
-	security_context_t context;
+	struct selabel_handle *handle;
+	char *context;
 
 	if (!oddjob_check_selinux_enabled()) {
 		return;
 	}
 
-	context = NULL;
-	if (matchpathcon(path, mode, &context) == 0) {
-		if (context != NULL) {
-			if (strcmp(context, "<<none>>") == 0) {
-				oddjob_unset_selinux_file_creation_context();
+	handle = selabel_open(SELABEL_CTX_FILE,NULL,0);
+	if (handle) {
+		if (selabel_lookup(handle,&context,path,mode) == 0) {
+			if (context != NULL) {
+				if (strcmp(context, "<<none>>") == 0) {
+					oddjob_unset_selinux_file_creation_context();
+				} else {
+					setfscreatecon(context);
+				}
+				freecon(context);
 			} else {
-				setfscreatecon(context);
-			}
-			freecon(context);
-		} else {
 			oddjob_unset_selinux_file_creation_context();
+			}
 		}
+		selabel_close(handle);
 	}
 }
 

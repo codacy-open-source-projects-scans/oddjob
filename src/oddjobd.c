@@ -242,8 +242,7 @@ static void check_selinux_applicable(void);
 static dbus_bool_t
 check_one_ac_selinux(struct oddjob_acl *acl, const char *selinux_context)
 {
-	char *ctx;
-	const char *user, *role, *type, *range;
+	const char *ctx, *user, *role, *type, *range;
 	dbus_bool_t ret;
 	context_t context;
 
@@ -1357,7 +1356,7 @@ load_config(struct oddjob_config *config,
 			filename);
 	}
 
-	xmlInitGlobals();
+	xmlInitParser();
 	doc = xmlParseFile(filename);
 	if (doc == NULL) {
 		fprintf(stderr, "Error parsing configuration from \"%s\".\n",
@@ -1380,7 +1379,6 @@ load_config(struct oddjob_config *config,
 	}
 
 	xmlFreeDoc(doc);
-	xmlCleanupGlobals();
 
 	return parsed;
 }
@@ -1948,7 +1946,7 @@ oddjobd_exec_method(struct oddjob_dbus_context *ctx,
 		/* Set up the SELinux execution context. */
 		if (globals.selinux_enabled) {
 			const char *client_secontext;
-			security_context_t helper_context, exec_context;
+			char *helper_context, *exec_context;
 
 			client_secontext = oddjob_dbus_message_get_selinux_context(msg);
 			if (client_secontext == NULL) {
