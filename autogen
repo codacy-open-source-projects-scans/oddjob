@@ -1,0 +1,7 @@
+#!/bin/bash
+autoreconf -i
+case `uname -i` in
+x86_64|sparc64|s390x) lib=lib64;;
+*) lib=lib;;
+esac
+env CFLAGS=-g3 ./configure --prefix=/usr --libdir=/usr/$lib --sysconfdir=/etc --enable-maintainer-mode --enable-pie --enable-now "$@"
